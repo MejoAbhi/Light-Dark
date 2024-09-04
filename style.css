@@ -9,10 +9,10 @@
 .banner{
     position: relative;
     display: flex;
+    padding: 100px;
     justify-content: space-between;
     align-items: center;
     min-height: 100vh;
-    padding: 100px;
     background: #fff;
     transition: 0.5s;
 }
@@ -93,7 +93,7 @@ header ul li a{
 .dayNight{
     position: absolute;
     bottom: 45px;
-    left:30%;
+    left:50%;
     width: 60px;
     height: 60px;
     background-color: #f0f0f0;
@@ -124,6 +124,42 @@ header ul li a{
 .banner.night .content p,
 .banner.night .content button.chat{
     color: #fff;
+}
+@media (max-width:720px){
+
+}
+@media (max-width:480px){
+    header .logo{
+        color: #333;
+        text-decoration: none;
+        font-size: 1.5em;
+        font-weight: 700;
+        transition: 0.5s;
+    }
+    header ul{
+        display: none;
+        
+    }
+    .content h2{
+        font-size: 3.3em;
+        color: #333;
+        transition: 0.5s;
+    }
+    .dayNight{
+        /* position: absolute; */
+        bottom: 45px;
+        left: 50%;
+        width: 60px;
+        height: 60px;
+        background-color: #f0f0f0;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: 0.5s;
+        font-size: 2em;
+    }
+   
 }
 
 
