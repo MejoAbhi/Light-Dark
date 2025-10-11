@@ -1,36 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio project</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Random Scratch Card Game</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    height: 100vh;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+  }
+
+  h1 {
+    color: white;
+    font-size: 1.8em;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .scratch-card {
+    position: relative;
+    width: 320px;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: #fff;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .hidden-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .reveal-section {
+    margin-top: 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 1.2em;
+    display: none;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #eee;
+  }
+
+  @media (max-width: 400px) {
+    .scratch-card {
+      width: 90%;
+      height: 180px;
+    }
+  }
+</style>
 </head>
 <body>
-    <section class="banner">
-        <header>
-            <a href="#" class="logo">ABHI<span>X</span>
-                Mejo</a>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Work</a></li>
-                <li><a href="#">Contant</a></li>
-            </ul>
-        </header>
-        <div class="content">
-            <h2>I am <span class="text">Developer</span></h2>
-            <p>Lets break the matrix</p>
-            <button>Join Us</button>
-            <button class="chat">Let's Chat</button>
-        </div>
-        <div class="dayNight">
-            <ion-icon name="moon-outline"></ion-icon>
-            <ion-icon name="sunny-outline"></ion-icon>
-        </div>
-    </section>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <script src="script.js"></script>
+
+<h1>🎁 Scratch to Reveal Your Picture!</h1>
+
+<div class="scratch-card" id="scratchCard">
+  <img id="hiddenImage" class="hidden-image" alt="Hidden" />
+  <canvas id="scratchCanvas" width="320" height="200"></canvas>
+</div>
+
+<div class="reveal-section" id="revealSection">
+  <p>🎉 You revealed the picture!</p>
+  <button id="newCard">Get Another Card</button>
+</div>
+
+<script>
+  // 📸 Local image file names in root folder
+  const totalImages = 17;
+  const imageList = [];
+
+  for (let i = 1; i <= totalImages; i++) {
+    imageList.push(`image${i}.png`); // assumes image1.jpg, image2.jpg ...
+  }
+
+  const hiddenImage = document.getElementById('hiddenImage');
+  const canvas = document.getElementById('scratchCanvas');
+  const ctx = canvas.getContext('2d');
+  const revealSection = document.getElementById('revealSection');
+  const newCardBtn = document.getElementById('newCard');
+
+  function setupScratchCard() {
+    revealSection.style.display = 'none';
+    canvas.style.opacity = 1;
+    document.getElementById('scratchCard').appendChild(canvas);
+
+    // 🎲 Pick random image from folder
+    const randomImage = imageList[Math.floor(Math.random() * imageList.length)];
+    hiddenImage.src = randomImage;
+
+    // 🧩 Draw top scratch layer
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#999';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 30;
+    ctx.lineCap = 'round';
+  }
+
+  let isDrawing = false;
+
+  const getPos = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return { x, y };
+  };
+
+  const startDrawing = (e) => {
+    isDrawing = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    isDrawing = false;
+
+    // 🔍 Check scratched percentage
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let transparentCount = 0;
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] === 0) transparentCount++;
+    }
+    const percent = transparentCount / (canvas.width * canvas.height) * 100;
+
+    if (percent > 50) {
+      canvas.style.transition = "opacity 0.8s ease";
+      canvas.style.opacity = 0;
+      setTimeout(() => {
+        canvas.remove();
+        revealSection.style.display = 'block';
+      }, 800);
+    }
+  };
+
+  // 🎨 Event Listeners (mouse + touch)
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDrawing);
+  canvas.addEventListener('mouseleave', stopDrawing);
+  canvas.addEventListener('touchstart', startDrawing);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchend', stopDrawing);
+
+  // 🔄 Load another random card
+  newCardBtn.addEventListener('click', setupScratchCard);
+
+  // 🚀 Initialize first card
+  setupScratchCard();
+</script>
 </body>
 </html>
